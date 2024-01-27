@@ -51,7 +51,7 @@ public class TimeServlet extends HttpServlet {
             String currentTime = OffsetDateTime.now(zoneId).format(DateTimeFormatter.ofPattern(DATA_TIME_FORMAT));
             Context context = new Context();
             context.setVariable("currentTime", currentTime);
-            context.setVariable(UTC, zoneId.getId());
+            context.setVariable("UTC", zoneId.getId());
             engine.process("time", context, resp.getWriter());
             resp.addCookie(new Cookie(LAST_TIMEZONE, UTC));
             resp.getWriter().close();
