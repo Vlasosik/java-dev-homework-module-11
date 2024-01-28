@@ -44,16 +44,16 @@ public class TimeServlet extends HttpServlet {
         try {
             String timezone = req.getParameter("timezone");
             timezone = lastCookies(req, timezone);
-            ZoneId zoneId = ZoneId.of((timezone != null && !timezone.isEmpty()) ? timezone : UTC);
-            Cookie cookie = new Cookie(LAST_TIMEZONE, timezone != null ? timezone : UTC);
-            cookie.setMaxAge(2880);
-            resp.addCookie(cookie);
+            ZoneId zoneId = (!timezone.isEmpty()) ? ZoneId.of(timezone) : ZoneId.of(UTC);
             String currentTime = OffsetDateTime.now(zoneId).format(DateTimeFormatter.ofPattern(DATA_TIME_FORMAT));
+            Cookie cookie;
+            cookie = new Cookie(LAST_TIMEZONE, timezone);
+            cookie.setMaxAge(5);
+            resp.addCookie(cookie);
             Context context = new Context();
             context.setVariable("currentTime", currentTime);
             context.setVariable("UTC", zoneId.getId());
             engine.process("time", context, resp.getWriter());
-            resp.addCookie(new Cookie(LAST_TIMEZONE, UTC));
             resp.getWriter().close();
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -67,6 +67,7 @@ public class TimeServlet extends HttpServlet {
         engine = null;
         super.destroy();
     }
+
     private static String lastCookies(HttpServletRequest req, String timezone) {
         Cookie[] cookies = req.getCookies();
         if (cookies != null) {
@@ -77,6 +78,7 @@ public class TimeServlet extends HttpServlet {
                 }
             }
         }
-        return timezone;
+        return (timezone != null && !timezone.isEmpty()) ? timezone : UTC;
     }
 }
+
