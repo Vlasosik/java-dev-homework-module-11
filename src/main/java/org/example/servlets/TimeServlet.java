@@ -46,8 +46,7 @@ public class TimeServlet extends HttpServlet {
             timezone = lastCookies(req, timezone);
             ZoneId zoneId = (!timezone.isEmpty()) ? ZoneId.of(timezone) : ZoneId.of(UTC);
             String currentTime = OffsetDateTime.now(zoneId).format(DateTimeFormatter.ofPattern(DATA_TIME_FORMAT));
-            Cookie cookie;
-            cookie = new Cookie(LAST_TIMEZONE, timezone);
+            Cookie cookie = new Cookie(LAST_TIMEZONE, timezone);
             cookie.setMaxAge(5);
             resp.addCookie(cookie);
             Context context = new Context();
