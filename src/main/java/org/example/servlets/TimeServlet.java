@@ -1,4 +1,5 @@
 package org.example.servlets;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Cookie;
@@ -8,10 +9,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.templateresolver.FileTemplateResolver;
+
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+
 @WebServlet("/time")
 public class TimeServlet extends HttpServlet {
     private static final String LAST_TIMEZONE = "lastTimezone";
@@ -19,6 +22,7 @@ public class TimeServlet extends HttpServlet {
     private static final String DATA_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final String UTC = "UTC";
     private transient TemplateEngine engine;
+
     @Override
     public void init() throws ServletException {
         super.init();
@@ -31,15 +35,17 @@ public class TimeServlet extends HttpServlet {
         resolver.setCacheable(false);
         engine.addTemplateResolver(resolver);
     }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("text/html; charset=utf-8");
         try {
             String timezone = req.getParameter("timezone");
-            timezone = lastCookies(req, timezone);
+            if (timezone == null || timezone.isEmpty()) {
+                timezone = getLastSavedTimezoneFromCookie(req, timezone);
+            }
             ZoneId zoneId = ZoneId.of((timezone != null && !timezone.isEmpty()) ? timezone : UTC);
-            Cookie cookie = new Cookie(LAST_TIMEZONE, zoneId.getId());
-            cookie.setMaxAge(5);
+            Cookie cookie = new Cookie(LAST_TIMEZONE, timezone);
             resp.addCookie(cookie);
             String currentTime = OffsetDateTime.now(zoneId).format(DateTimeFormatter.ofPattern(DATA_TIME_FORMAT));
             Context context = new Context();
@@ -54,12 +60,14 @@ public class TimeServlet extends HttpServlet {
             resp.getWriter().write("Internal Server Error!");
         }
     }
+
     @Override
     public void destroy() {
         engine = null;
         super.destroy();
     }
-    private static String lastCookies(HttpServletRequest req, String timezone) {
+
+    private static String getLastSavedTimezoneFromCookie(HttpServletRequest req, String timezone) {
         Cookie[] cookies = req.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
