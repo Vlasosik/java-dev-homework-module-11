@@ -42,11 +42,13 @@ public class TimeServlet extends HttpServlet {
         try {
             String timezone = req.getParameter("timezone");
             if (timezone == null || timezone.isEmpty()) {
-                timezone = getLastSavedTimezoneFromCookie(req, timezone);
+                timezone = UTC;
+            }else {
+                Cookie cookie = new Cookie(LAST_TIMEZONE, timezone);
+                resp.addCookie(cookie);
             }
-            ZoneId zoneId = ZoneId.of((timezone != null && !timezone.isEmpty()) ? timezone : UTC);
-            Cookie cookie = new Cookie(LAST_TIMEZONE, timezone);
-            resp.addCookie(cookie);
+            ZoneId zoneId = ZoneId.of(timezone);
+
             String currentTime = OffsetDateTime.now(zoneId).format(DateTimeFormatter.ofPattern(DATA_TIME_FORMAT));
             Context context = new Context();
             context.setVariable("currentTime", currentTime);
